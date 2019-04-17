@@ -1,67 +1,53 @@
-let mainState = document.getElementById("NgState");
-let mainOutput = "";
-let localGov = document.getElementById("locals");
+let http = require("http");
+let fs = require("fs");
+let path = require("path");
 
-//fetch the data from the json file
-fetch("nigeria.json")
-  .then(response => {
-    //return the data as json
-    return response.json();
-  })
-  .then(data => {
-    mainOutput += '<option value="">Select a state</option>';
-    //loop through the data
-    data.forEach(element => {
-      
-      let states = element.state.name;
-      mainOutput +=
-        '<option value="' +
-        states +
-        '" id="name_of_state">' +
-        states +
-        "</option>";
-      mainState.innerHTML = mainOutput;
-    });
-    
-  });
-
-function getlocals() {
-  
-  // fetch the json data
-  fetch("nigeria.json")
-  .then(response => {
-    //return the response in json format
-    return response.json();
-  })
-  .then(data => {
-    //loop through the data
-    for (var i in data) {
-      let state_name = mainState.value;
-      //check if the name of the state selected matches any of the looped state
-      if (data[i].state.name == state_name) {
-        let locals = data[i].state.locals;
-        var localOutput = "";
-        //loop through the local government of the specified state
-        locals.forEach( (local) => {
-          
-          localOutput += `<option value="${local.name}">${local.name}</option>`;
-        });
-        localGov.innerHTML = localOutput;
-        
-      }
-    }
-    });
+// visit https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types 
+// for more MIME types
+const mimeTypes = {
+    '.html': 'text/html',
+    '.js': 'text/javascript',
+    '.css': 'text/css',
+    '.json': 'application/json',
+    '.png': 'image/png',
+	'.jpg': 'image/jpg',	
 }
 
-/**
- * Function to view the details
- * details => state and the local government
- */
-function viewDetails() {
-  let detailsElemnt = "";
-  let stateValue = mainState.value;
-  let localGovtValue = localGov.value;
-  detailsElemnt += `<p><strong>State:</strong> ${stateValue}</p>
-                    <p><strong>Local Government:</strong> ${localGovtValue}</p>`;
-  document.getElementById('details').innerHTML = detailsElemnt;
+const App = (req, res) => {
+	let filePath = "." + req.url; // get the url of request
+	if (filePath == "./")  filePath = "./index.html"; // if url == / respond with the index.html
+
+	let fileExt = path.extname(filePath).toString().toLowerCase(); // get the extension of the requested file resource
+	let contentType = mimeTypes[fileExt] || "application/octet-stream"; // get MIME type from file extension
+	
+	//this line is really not necessary, 
+	// but because files to be sent are in my a seperate ./public directory
+	// this keeps the project/folder structure neat
+	let _file =path.join(__dirname, 'public', filePath);
+
+	// read the file using  prepared _file
+	fs.readFile(_file, (error, content) => {
+		if (error) { // check for errors
+			console.log(error);
+			let { message } = error; // get error message
+			return res.end(message, 'utf-8'); // end response with error message
+		}
+		
+		// no errors
+		// respond to the client with the file information
+		res.writeHead(200, { 'Content-Type': contentType });
+		res.end(content, 'utf-8');
+	});
+
 }
+
+//create a server object:
+http.createServer(App)
+    .listen(3000)
+    .on("error", error => {
+		console.log('An error occured creating the server');
+		console.log(error);
+    })
+    .on("listening", () => {
+        console.log("Server running on port 3000");
+    });
