@@ -1,56 +1,46 @@
-let mainState = document.getElementById("NgState");
-let mainOutput = "";
-let localGov = document.getElementById("locals");
+let allStates, stateArray;
+let selectState = document.getElementById("NgState");
+let stateOutput = "";
+let localGov = document.getElementById("localGov");
 
-//fetch the data from the json file
-fetch("nigeria.json")
+fetch("http://127.0.0.1:3000/nigeria.json")
   .then(response => {
-    //return the data as json
     return response.json();
   })
   .then(data => {
-    mainOutput += '<option value="">Select a state</option>';
-    //loop through the data
-    data.forEach(element => {
-      
-      let states = element.state.name;
-      mainOutput +=
+    stateOutput += '<option value="">Select a state</option>';
+    stateArray = data;
+    for (let i in data) {
+      allStates = data[i].state.name;
+      stateOutput +=
         '<option value="' +
-        states +
+        allStates +
         '" id="name_of_state">' +
-        states +
+        allStates +
         "</option>";
-      mainState.innerHTML = mainOutput;
-    });
-    
+    }
+    selectState.innerHTML = stateOutput;
+  })
+  .catch(err => {
+    throw err;
   });
 
 function getlocals() {
-  
-  // fetch the json data
-  fetch("nigeria.json")
-  .then(response => {
-    //return the response in json format
-    return response.json();
-  })
-  .then(data => {
-    //loop through the data
-    for (var i in data) {
-      let state_name = mainState.value;
-      //check if the name of the state selected matches any of the looped state
-      if (data[i].state.name == state_name) {
-        let locals = data[i].state.locals;
-        var localOutput = "";
-        //loop through the local government of the specified state
-        locals.forEach( (local) => {
-          
-          localOutput += `<option value="${local.name}">${local.name}</option>`;
-        });
-        localGov.innerHTML = localOutput;
-        
+  for (let i in stateArray) {
+    let selectedState = selectState.value;
+
+    if (selectedState == stateArray[i].state.name) {
+      let statesLocalGov = stateArray[i].state.locals;
+      let statesLocalGovOutput = "";
+      statesLocalGovOutput += "<option>---Select Local Government---</option>";
+      for (let j in statesLocalGov) {
+        statesLocalGovOutput += `<option value="${statesLocalGov[j].name}">${
+          statesLocalGov[j].name
+        }</option>`;
       }
+      localGov.innerHTML = statesLocalGovOutput;
     }
-    });
+  }
 }
 
 /**
@@ -59,9 +49,9 @@ function getlocals() {
  */
 function viewDetails() {
   let detailsElemnt = "";
-  let stateValue = mainState.value;
+  let stateValue = selectState.value;
   let localGovtValue = localGov.value;
   detailsElemnt += `<p><strong>State:</strong> ${stateValue}</p>
                     <p><strong>Local Government:</strong> ${localGovtValue}</p>`;
-  document.getElementById('details').innerHTML = detailsElemnt;
+  document.getElementById("details").innerHTML = detailsElemnt;
 }
