@@ -1,0 +1,11 @@
+{
+  "name": "nigeria-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server -a 127.0.0.1 -p 8000 -c-1"
+  },
+  "author": "",
+  "license": "ISC"
+}
