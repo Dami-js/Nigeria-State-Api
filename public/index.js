@@ -1,47 +1,42 @@
-let allStates, stateArray;
 let selectState = document.getElementById("NgState");
-let stateOutput = "";
 let localGov = document.getElementById("localGov");
 
-fetch("http://127.0.0.1:3000/nigeria.json")
-  .then(response => {
-    return response.json();
-  })
-  .then(data => {
-    stateOutput += '<option value="">Select a state</option>';
-    stateArray = data;
-    for (let i in data) {
-      allStates = data[i].state.name;
-      stateOutput +=
-        '<option value="' +
-        allStates +
-        '" id="name_of_state">' +
-        allStates +
-        "</option>";
-    }
-    selectState.innerHTML = stateOutput;
-  })
-  .catch(err => {
-    throw err;
-  });
+(async () => {
+	try {
+		let response = await fetch('nigeria.json'); // get data
+		
+		// ensure data was successful
+		if (response.status !== 200) return alert('Page not loaded');
 
-function getlocals() {
-  for (let i in stateArray) {
-    let selectedState = selectState.value;
+		const Nigeria = await response.json(); // create a global data
 
-    if (selectedState == stateArray[i].state.name) {
-      let statesLocalGov = stateArray[i].state.locals;
-      let statesLocalGovOutput = "";
-      statesLocalGovOutput += "<option>---Select Local Government---</option>";
-      for (let j in statesLocalGov) {
-        statesLocalGovOutput += `<option value="${statesLocalGov[j].name}">${
-          statesLocalGov[j].name
-        }</option>`;
-      }
-      localGov.innerHTML = statesLocalGovOutput;
-    }
-  }
-}
+		const States = await Nigeria.map(state => state.state.name); // get states
+		
+		// get lga
+		const Lga = state => {
+			let stateIndex = Nigeria.findIndex(point => point.state.name.toLowerCase() == state.toLowerCase());
+			let stateObj = Nigeria[stateIndex];
+			let lga = stateObj.state.locals.map(local => local.name);
+
+			return lga;
+		};
+
+		selectState.innerHTML = '<option value"" disabled selected>Select state</option>' + await States.map(
+            state => `<option value="${state.toLowerCase()}">${state}</option>`
+		).join('');
+		
+		selectState.onchange = async (e) => {
+			let lga = Lga(selectState.value);
+
+			localGov.innerHTML = '<option value"" disabled selected>Select Local government</option>' + await lga.map(
+				lg => `<option value="${lg.toLowerCase()}">${lg}</option>`
+			).join('');
+		}
+	} catch (error) {
+		console.log(error);
+		alert(`Page loaded with errors: ${error.message}`);
+	}
+})(); // end async instantainous function
 
 /**
  * Function to view the details
